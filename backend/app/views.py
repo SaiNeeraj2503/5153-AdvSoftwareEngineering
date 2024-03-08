@@ -43,4 +43,23 @@ def signup(request):
 
 
 
+@require_POST
+def login(request):
+    data = json.loads(request.body)
+    email = data.get('email')
+    password = data.get('password')
+
+    db = get_database(email)
+
+    users_collection = db['USERS']
+
+    user = users_collection.find_one({'email': email})
+
+    if user:
+        if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+            return JsonResponse({'message': 'Login successful', 'userId': user['user_id'], 'email': user['email']})
+        else:
+            return JsonResponse({'message': 'Invalid email or password'}, status=400)
+    else:
+        return JsonResponse({'error': 'User not found'}, status=404)
     
