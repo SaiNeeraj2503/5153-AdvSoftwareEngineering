@@ -64,6 +64,7 @@ def login(request):
         return JsonResponse({'error': 'User not found'}, status=404)
     
 
+
 def create_post(request):
     try:
         data = json.loads(request.body)
