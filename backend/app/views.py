@@ -5,7 +5,7 @@ from utils.mongo import get_database
 import json
 import bcrypt
 import uuid
-
+import math
 
 # Create your views here.
 @require_POST
@@ -63,3 +63,76 @@ def login(request):
     else:
         return JsonResponse({'error': 'User not found'}, status=404)
     
+
+def create_post(request):
+    try:
+        data = json.loads(request.body)
+        userId = data.get('userId')
+        title = data.get('title')
+        description = data.get('description')
+        mediaUrl = data.get('mediaUrl')
+        timestamp = data.get('timestamp')
+        email = data.get('email')
+        
+        db = get_database(email)
+        
+        posts_collection = db["POSTS"]
+
+        postId = str(uuid.uuid4())
+        
+        post_data = {
+            'postId': postId,
+            'userId': userId,
+            'title': title,
+            'description': description,
+            'mediaUrl': mediaUrl,
+            'timestamp': timestamp,
+        }
+        posts_collection.insert_one(post_data)
+        
+        return JsonResponse({'message': 'Post created successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+
+def get_posts(request):
+    try:
+        email = request.GET.get('email')
+        page = int(request.GET.get('page', 1))
+        posts_per_page = 5
+
+        start_index = (page - 1) * posts_per_page
+
+        db = get_database(email)
+        total_posts_count = db["POSTS"].count_documents({})
+
+        if start_index >= total_posts_count:
+            return JsonResponse([], safe=False)
+
+        end_index = min(start_index + posts_per_page, total_posts_count)
+
+        posts = db["POSTS"].find().skip(start_index).limit(end_index - start_index)
+
+        serialized_posts = []
+        for post in posts:
+            user_data = db["USERS"].find_one({'user_id': post['userId']})
+            if user_data:
+                username = user_data['username']
+            else:
+                username = '' 
+
+            serialized_post = {
+                'id': str(post['_id']),
+                'userId': post['userId'],
+                'username': username,
+                'title': post['title'],
+                'description': post['description'],
+                'mediaUrl': post['mediaUrl'],
+                'timestamp': post['timestamp'],
+            }
+            serialized_posts.append(serialized_post)
+
+        return JsonResponse(serialized_posts, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
