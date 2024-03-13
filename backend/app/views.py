@@ -195,4 +195,82 @@ def get_products(request):
         'totalPages': total_pages
     })
 
+def create_listing(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            company_name = data.get('companyName')
+            role = data.get('role')
+            requirements = data.get('requirements')
+            description = data.get('description')
+            apply_link = data.get('applyLink')
+            applyEmail = data.get('applyEmail')
+            salary = data.get('salary')
+            location = data.get('location')
+            expected_joining_date = data.get('expectedJoiningDate')
+            email = data.get('userEmail')
+            listing_type = data.get('listingType')
 
+            db = get_database(email)
+            
+            listing_id = str(uuid.uuid4())
+
+            listing_data = {
+                'listingId': listing_id,
+                'companyName': company_name,
+                'role': role,
+                'requirements': requirements,
+                'description': description,
+                'applyLink': apply_link,
+                'email': applyEmail,
+                'salary': salary,
+                'location': location,
+                'expectedJoiningDate': expected_joining_date,
+                'userEmail': email,
+            }
+
+            if listing_type == 'job':
+                listings_collection = db["JOBS"]
+                listing_data['listingType'] = 'job'
+            elif listing_type == 'internship':
+                listings_collection = db["INTERNSHIPS"]
+                listing_data['listingType'] = 'internship'
+            else:
+                return JsonResponse({'error': 'Invalid listing type'}, status=400)
+
+            listings_collection.insert_one(listing_data)
+
+            return JsonResponse({'message': 'Listing created successfully'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_listings(request):
+    try:
+        page = int(request.GET.get('page', 1))
+        email = request.GET.get('email')
+        listing_type = request.GET.get('type')
+        listings_per_page = 4
+        start_index = (page - 1) * listings_per_page
+
+        db = get_database(email)
+        if listing_type == 'job':
+            listings_collection = db["JOBS"]
+        elif listing_type == 'internship':
+            listings_collection = db["INTERNSHIPS"]
+        else:
+            return JsonResponse({'error': 'Invalid listing type'}, status=400)
+
+        listings_cursor = listings_collection.find({}, {'_id': False}).skip(start_index).limit(listings_per_page)
+        listings = list(listings_cursor)
+
+        total_listings = listings_collection.count_documents({})
+
+        total_pages = math.ceil(total_listings / listings_per_page)
+        return JsonResponse({
+            'listings': listings,
+            'totalPages': total_pages
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
