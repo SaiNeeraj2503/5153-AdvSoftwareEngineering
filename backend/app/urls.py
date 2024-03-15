@@ -8,4 +8,6 @@ urlpatterns = [
     path('get-posts/', views.get_posts, name='get-posts'),
     path('create-product', views.create_product, name='create-product'),
     path('get-products', views.get_products, name='get-products'),
+    path('create-listing', views.create_listing, name='create-listing'),
+    path('get-listings', views.get_listings, name='get-listings'),
 ]
