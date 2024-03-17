@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 # MongoDB Atlas connection string
-MONGO_URI = "put_your_mongo_atlas_uri_here"
+MONGO_URI = "mongodb+srv://cluster0:advse@cluster0.gfau9ro.mongodb.net/"
 
 
 def extract_domain(email):
