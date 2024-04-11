@@ -10,4 +10,7 @@ urlpatterns = [
     path('get-products', views.get_products, name='get-products'),
     path('create-listing', views.create_listing, name='create-listing'),
     path('get-listings', views.get_listings, name='get-listings'),
+    path('create-group', views.create_group, name='create-group'),
+    path('get-users', views.get_users, name='get-users'),
+    path('get-groups', views.get_groups, name='get-groups')
 ]

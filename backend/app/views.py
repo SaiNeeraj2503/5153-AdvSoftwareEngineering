@@ -6,6 +6,7 @@ import json
 import bcrypt
 import uuid
 import math
+from datetime import datetime
 
 # Create your views here.
 @require_POST
@@ -274,3 +275,82 @@ def get_listings(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def create_group(request):
+    try:
+        if request.method == 'POST':
+            data = json.loads(request.body)
+
+            user_id = data.get('user_id')
+            group_name = data.get('groupName')
+            group_description = data.get('groupDescription')
+            group_image = data.get('groupImage')
+            users = data.get('users', [])
+            email = data.get('email')
+            
+            db = get_database(email)
+            groups_collection = db['GROUPS']
+
+            group_data = {
+                'user_id': user_id, 
+                'group_id': str(uuid.uuid4()),
+                'admin': email,
+                'group_name': group_name,
+                'group_description': group_description,
+                'group_image': group_image,
+                'users': users,
+            }
+            
+            groups_collection.insert_one(group_data)
+
+            activity_description = f"🎉 Congratulations! You've just initiated a new group named '{group_name}'. Let's start building an amazing community together! 🚀"
+
+            admin_activity_data = {
+                'user_id': user_id,
+                'description': activity_description,
+                'created_at': datetime.now(),
+            }
+            user_activity_collection = db['user_activity']
+            user_activity_collection.insert_one(admin_activity_data)
+
+            for user in users:
+                if user != user_id:
+                    user_activity_data = {
+                        'user_id': user,
+                        'description': f"🌐 Welcome to the community! You've joined the group '{group_name}'. Let's embark on this journey together! 🚀",
+                        'created_at': datetime.now(),
+                    }
+                    user_activity_collection.insert_one(user_activity_data)
+
+            return JsonResponse({'message': 'Group created successfully'})
+        else:
+            return JsonResponse({'error': 'Only POST requests are allowed for this endpoint'}, status=405)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+        
+
+def get_users(request):
+    try:
+        data = json.loads(request.body)
+        email = data.get('email')
+        db = get_database(email)
+        users_collection = db['USERS']
+        
+        users = list(users_collection.find({}, {'_id': 0}))
+        
+        return JsonResponse({'users': users})
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def get_groups(request):
+    email = request.GET.get('email')
+    if email:
+        db = get_database(email)
+        groups_collection = db['GROUPS']
+        groups = list(groups_collection.find())
+        serialized_groups = [{'id': str(group['group_id']), 'name': group['group_name'], 'image': group['group_image'], 'isAdmin': email==group['admin']} for group in groups]
+        return JsonResponse({'groups': serialized_groups})
+    else:
+        return JsonResponse({'error': 'Email parameter is missing'}, status=400)
