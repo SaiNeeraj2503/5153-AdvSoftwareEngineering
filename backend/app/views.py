@@ -354,3 +354,121 @@ def get_groups(request):
         return JsonResponse({'groups': serialized_groups})
     else:
         return JsonResponse({'error': 'Email parameter is missing'}, status=400)
+    
+
+def post_message(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        group_id = data.get('groupId')
+        message_content = data.get('content')
+        email = data.get('email')
+
+        timestamp = datetime.now()
+
+        try:
+            message_id = str(uuid.uuid4())
+            message = {
+                'message_id': message_id,
+                'group_id': group_id,
+                'message_content': message_content,
+                'timestamp': timestamp
+            }
+
+            db = get_database(email)
+            messages_collection = db['MESSAGES']
+
+            messages_collection.insert_one(message)
+
+            return JsonResponse({'message_id': message_id,'group_id':group_id, 'message_content':message_content, 'timestamp': timestamp, 'success': True}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e), 'success': False}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Invalid request method', 'success': False}, status=405)
+
+
+
+def get_messages(request):
+    if request.method == 'GET':
+        group_id = request.GET.get('groupId')
+        email = request.GET.get('email')
+        print(group_id, email)
+        try:
+            db = get_database(email)
+            messages_collection = db['MESSAGES']
+
+            messages = messages_collection.find({'group_id': group_id}).sort([('timestamp', 1), ('group_id', 1)])
+
+            message_list = [{'message_id': str(message['_id']), 'group_id': str(message['group_id']), 'content': message['message_content'], 'timestamp': message['timestamp']} for message in messages]
+
+            return JsonResponse({'messages': message_list}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+
+def update_user(request):
+    data = json.loads(request.body)
+    user_id = data.get('userId')
+    new_username = data.get('username')
+    new_email = data.get('email')
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+
+    try:
+        database = get_database(new_email)
+        users_collection = database['USERS']
+
+        user = users_collection.find_one({'user_id': user_id})
+        if not user:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        if not bcrypt.checkpw(current_password.encode('utf-8'), user['password'].encode('utf-8')):
+            return JsonResponse({'error': 'Current password is incorrect'}, status=400)
+
+        if new_username:
+            user['username'] = new_username
+        if new_email:
+            user['email'] = new_email
+        if new_password:
+            hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+            user['password'] = hashed_password.decode('utf-8')
+
+        users_collection.update_one({'user_id': user_id}, {'$set': user})
+
+        return JsonResponse({'message': 'User details updated successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def user_activity(request):
+    userId = request.GET.get('userId')
+    page_number = int(request.GET.get('page', 1))
+    page_size = 10 
+    start_index = (page_number - 1) * page_size
+    end_index = start_index + page_size
+
+    email = request.GET.get('email')
+
+    if not userId or not email:
+        return JsonResponse({'error': 'userId and email are required'}, status=400)
+
+    try:
+        database = get_database(email)
+        user_activity_collection = database['user_activity']
+        
+        total_activities = user_activity_collection.count_documents({'user_id': userId})
+        
+        total_pages = (total_activities + page_size - 1) // page_size
+
+        user_activity = user_activity_collection.find({'user_id': userId}).sort('created_at', -1)[start_index:end_index]
+        activity_list = [{
+            'description': activity['description'],
+            'created_at': activity['created_at']
+        } for activity in user_activity]
+
+        return JsonResponse({'activities': activity_list, 'totalPages': total_pages}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
