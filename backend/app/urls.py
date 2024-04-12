@@ -12,5 +12,9 @@ urlpatterns = [
     path('get-listings', views.get_listings, name='get-listings'),
     path('create-group', views.create_group, name='create-group'),
     path('get-users', views.get_users, name='get-users'),
-    path('get-groups', views.get_groups, name='get-groups')
+    path('get-groups', views.get_groups, name='get-groups'),
+    path('post-message', views.post_message, name='post-message'),
+    path('get-messages', views.get_messages, name='get-messages'),
+    path('update-user', views.update_user, name='update_user'),
+    path('user-activity/', views.user_activity, name='user_activity'),
 ]
