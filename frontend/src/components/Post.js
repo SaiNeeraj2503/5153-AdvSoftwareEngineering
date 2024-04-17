@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import moment from 'moment';
+import { FaAngleDown, FaAngleUp } from 'react-icons/fa'; // Import icons for extending and collapsing
 
 const Post = ({ username, timestamp, imageUrl, title, description }) => {
-  // Function to format the timestamp
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
   const formatTimestamp = (timestamp) => {
     const now = moment();
     const postTime = moment(timestamp);
@@ -15,6 +17,10 @@ const Post = ({ username, timestamp, imageUrl, title, description }) => {
     }
   };
 
+  const toggleDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
   return (
     <div className="flex justify-center mb-8">
       <div className="bg-white rounded-lg shadow-md w-full max-w-md p-4">
@@ -25,7 +31,25 @@ const Post = ({ username, timestamp, imageUrl, title, description }) => {
         <img src={imageUrl} alt="Post" className="w-full rounded-lg mb-2" />
         <div>
           <h2 className="text-lg font-semibold mb-2">{title}</h2>
-          <p className="text-gray-700">{description}</p>
+          {showFullDescription ? (
+            <>
+              <p className="text-gray-700">{description}</p>
+              <div className="flex justify-end mt-2"> {/* Align buttons to the right */}
+                <button onClick={toggleDescription} className="text-blue-500 text-sm">
+                  <FaAngleUp /> 
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-700">{description.slice(0, 100)}...</p>
+              <div className="flex justify-end mt-2"> {/* Align buttons to the right */}
+                <button onClick={toggleDescription} className="text-blue-500 text-sm">
+                  <FaAngleDown /> 
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
