@@ -472,3 +472,37 @@ def user_activity(request):
         return JsonResponse({'activities': activity_list, 'totalPages': total_pages}, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def save_feedback(request):
+    try:
+        data = json.loads(request.body)
+        userID = data.get('userId')
+        email = data.get('email')
+        
+        usageFrequency = data.get('usageFrequency')
+        motivation = data.get('motivation')
+        mostUsedFeature = data.get('mostUsedFeature')
+        improvements = data.get('improvements')
+        feedback = data.get('feedback')
+        timestamp = datetime.now()
+
+        database = get_database(email)
+
+        feedback_collection = database['FEEDBACK']
+
+        feedback_data = {
+            'userId': userID,
+            'usageFrequency': usageFrequency,
+            'motivation': motivation,
+            'mostUsedFeature': mostUsedFeature,
+            'improvements': improvements,
+            'feedback': feedback,
+            'timestamp': timestamp
+        }
+
+        feedback_collection.insert_one(feedback_data)
+
+        return JsonResponse({'message': 'Feedback saved successfully'}, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
