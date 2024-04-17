@@ -17,4 +17,5 @@ urlpatterns = [
     path('get-messages', views.get_messages, name='get-messages'),
     path('update-user', views.update_user, name='update_user'),
     path('user-activity/', views.user_activity, name='user_activity'),
+    path('save-feedback', views.save_feedback, name='save_feedback'),
 ]
