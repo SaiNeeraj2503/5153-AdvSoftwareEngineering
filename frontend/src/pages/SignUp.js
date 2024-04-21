@@ -26,6 +26,11 @@ const SignUpForm = ({ onSignUp }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.email.endsWith('@my.msutexas.edu')) {
+      setErrorMessage('Sign-up is only allowed with @my.msutexas.edu email addresses.');
+      return;
+    }
+    
     try {
       const response = await axios.post('http://127.0.0.1:8000/app/signup/', {
         email: formData.email,
