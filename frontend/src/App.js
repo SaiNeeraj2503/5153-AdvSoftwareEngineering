@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -9,6 +9,7 @@ import Postings from './pages/Postings';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Account from './pages/Account';
+import Feedback from './components/Feedback';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -17,7 +18,6 @@ function App() {
   const [email, setEmail] = useState('');
 
   useEffect(() => {
-    // Check if user is already logged in from localStorage
     const storedUserId = localStorage.getItem('userId');
     const storedEmail = localStorage.getItem('email');
     if (storedUserId && storedEmail) {
@@ -29,7 +29,6 @@ function App() {
   }, []);
 
   const handleLogout = () => {
-    // Clear authentication state and localStorage
     setIsAuthenticated(false);
     setUserId('');
     setEmail('');
@@ -57,12 +56,13 @@ function App() {
         <Routes>
           <Route exact path="/" element={isAuthenticated ? <Navigate to="/discover" /> : <Home />} />
           <Route path="/discover" element={isAuthenticated ? <Discover userId={userId} email={email}/> : <Navigate to="/login" />} />
-          <Route path="/groups" element={isAuthenticated ? <Groups /> : <Navigate to="/login" />} />
+          <Route path="/groups" element={isAuthenticated ? <Groups userId={userId} email={email}/> : <Navigate to="/login" />} />
           <Route path="/marketplace" element={isAuthenticated ? <Marketplace userId={userId} email={email}/> : <Navigate to="/login" />} />
-          <Route path="/postings" element={isAuthenticated ? <Postings /> :<Navigate to="/login" /> } />
+          <Route path="/postings" element={isAuthenticated ? <Postings userId={userId} email={email}/> :<Navigate to="/login" /> } />
           <Route path="/signup" element={<SignUp onSignUp={handleLogin} />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/account" element={<Account />} />
+          <Route path="/account" element={isAuthenticated ? <Account userId={userId} email={email}/> :<Navigate to="/login" /> } />
+          <Route path="/feedback" element={<Feedback userId={userId} email={email}/>} />
         </Routes>
       </div>
     </Router>
