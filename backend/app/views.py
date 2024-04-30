@@ -598,3 +598,84 @@ def get_events(request):
         return JsonResponse({'events': serialized_events, 'totalPages': total_pages}, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def create_poll(request):
+    try:
+        data = json.loads(request.body)
+        userId = data.get('userId')
+        question = data.get('question')
+        options = data.get('options')
+        email = data.get('email')
+        timestamp = datetime.now()
+
+        votes = [0] * len(options)
+        voted_by = []
+
+        db = get_database(email)
+        
+        polls_collection = db["POLLS"]
+
+        pollId = str(uuid.uuid4())
+        
+        poll_data = {
+            'pollId': pollId,
+            'userId': userId,
+            'question': question,
+            'options': options,
+            'votes': votes,
+            'votedBy': voted_by,
+            'timestamp': timestamp,
+        }
+
+        polls_collection.insert_one(poll_data)
+
+        activity_description = f"🎉 Hooray! You have created a new poll with the question: '{question}'. Let's hear what the community has to say! 🌟"
+
+        activity_data = {
+            'user_id': userId,
+            'description': activity_description,
+            'created_at': datetime.now(),
+        }
+
+        user_activity_collection = db['user_activity']
+        user_activity_collection.insert_one(activity_data)
+        
+        return JsonResponse({'message': 'Poll created successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    
+def get_polls(request):
+    try:
+        email = request.GET.get('email')
+        page = int(request.GET.get('page', 1))
+
+        polls_per_page = 10
+
+        db = get_database(email)
+
+        total_polls_count = db["POLLS"].count_documents({})
+        total_pages = math.ceil(total_polls_count / polls_per_page)
+        
+        start_index = (page - 1) * polls_per_page
+        end_index = start_index + polls_per_page
+
+        polls = db["POLLS"].find().sort('timestamp', -1).skip(start_index).limit(polls_per_page)
+        
+        serialized_polls = []
+        for poll in polls:
+            user_data = db["USERS"].find_one({'user_id': poll['userId']})
+            username = user_data['username'] if user_data else ''
+            serialized_poll = {
+                'id': poll['pollId'],  # Keep it as 'pollId'
+                'userId': poll['userId'],
+                'username': username,
+                'question': poll['question'],
+                'options': poll['options'],
+                'timestamp': poll['timestamp'],
+            }
+            serialized_polls.append(serialized_poll)
+
+        return JsonResponse({'polls': serialized_polls, 'totalPages': total_pages}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

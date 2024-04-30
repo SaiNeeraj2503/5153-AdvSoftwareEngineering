@@ -20,4 +20,6 @@ urlpatterns = [
     path('save-feedback', views.save_feedback, name='save_feedback'),
     path('create-event/', views.create_event, name='create-event'),
     path('get-events', views.get_events, name='get-events'),
+    path('create-poll/', views.create_poll, name='create-poll'),
+    path('get-polls', views.get_polls, name='get-polls'),
 ]
