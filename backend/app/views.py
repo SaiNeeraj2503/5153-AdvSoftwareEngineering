@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.hashers import check_password
+from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from utils.mongo import get_database
 import json
 import bcrypt
@@ -506,3 +509,92 @@ def save_feedback(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+def create_event(request):
+    try:
+        data = json.loads(request.body)
+        userId = data.get('userId')
+        title = data.get('title')
+        description = data.get('description')
+        mediaUrl = data.get('mediaUrl')
+        timestamp = data.get('timestamp')
+        email = data.get('email')
+        dueDate = data.get('dueDate')
+
+        db = get_database(email)
+        
+        events_collection = db["EVENTS"]
+
+        eventId = str(uuid.uuid4())
+        
+        event_data = {
+            'eventId': eventId,
+            'userId': userId,
+            'title': title,
+            'description': description,
+            'mediaUrl': mediaUrl,
+            'timestamp': timestamp,
+            'dueDate': dueDate,
+        }
+
+        events_collection.insert_one(event_data)
+
+        activity_description = f"🎉 Hooray! You have created a new event titled '{title}'. Take a peek at what's inside: '{description[:50]}'. Keep the good vibes flowing! 🌟"
+
+        activity_data = {
+            'user_id': userId,
+            'description': activity_description,
+            'created_at': datetime.now(),
+        }
+
+        user_activity_collection = db['user_activity']
+        user_activity_collection.insert_one(activity_data)
+        
+        return JsonResponse({'message': 'Event created successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def get_events(request):
+    try:
+        email = request.GET.get('email')
+        page = int(request.GET.get('page', 1))
+        search_query = request.GET.get('searchQuery', '')
+        events_per_page = 10
+
+        db = get_database(email)
+
+        filter_query = {}
+        if search_query:
+            filter_query['$or'] = [
+                {'title': {'$regex': search_query, '$options': 'i'}},
+                {'description': {'$regex': search_query, '$options': 'i'}},
+            ]
+
+        total_events_count = db["EVENTS"].count_documents(filter_query)
+        total_pages = math.ceil(total_events_count / events_per_page)
+
+        start_index = (page - 1) * events_per_page
+        end_index = start_index + events_per_page
+
+        events = db["EVENTS"].find(filter_query).sort('dueDate', 1).skip(start_index).limit(events_per_page)
+
+        serialized_events = []
+        for event in events:
+            user_data = db["USERS"].find_one({'user_id': event['userId']})
+            username = user_data['username'] if user_data else ''
+            serialized_event = {
+                'id': str(event['_id']),
+                'userId': event['userId'],
+                'username': username,
+                'title': event['title'],
+                'description': event['description'],
+                'mediaUrl': event['mediaUrl'],
+                'timestamp': event['timestamp'],
+                'dueDate': event['dueDate'],
+            }
+            serialized_events.append(serialized_event)
+
+        return JsonResponse({'events': serialized_events, 'totalPages': total_pages}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
