@@ -18,4 +18,6 @@ urlpatterns = [
     path('update-user', views.update_user, name='update_user'),
     path('user-activity/', views.user_activity, name='user_activity'),
     path('save-feedback', views.save_feedback, name='save_feedback'),
+    path('create-event/', views.create_event, name='create-event'),
+    path('get-events', views.get_events, name='get-events'),
 ]
