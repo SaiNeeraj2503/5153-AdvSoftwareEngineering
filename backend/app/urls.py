@@ -22,4 +22,6 @@ urlpatterns = [
     path('get-events', views.get_events, name='get-events'),
     path('create-poll/', views.create_poll, name='create-poll'),
     path('get-polls', views.get_polls, name='get-polls'),
+    path('add-vote', views.add_vote, name='add-vote'),
+    path('get-votes', views.get_votes, name='get-votes'),
 ]

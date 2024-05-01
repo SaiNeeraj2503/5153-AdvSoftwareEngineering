@@ -679,3 +679,50 @@ def get_polls(request):
         return JsonResponse({'polls': serialized_polls, 'totalPages': total_pages}, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+def add_vote(request):
+    try:
+        data = json.loads(request.body)
+        pollId = data.get('pollId')
+        optionIndex = data.get('selectedOptionIndex')
+        email = data.get('email')
+
+        db = get_database(email)
+
+        poll = db["POLLS"].find_one({'pollId': pollId})
+
+        if not poll:
+            return JsonResponse({'error': 'Poll not found'}, status=404)
+
+        # Check if the user has already voted
+        if email in poll.get('voted_by', []):
+            return JsonResponse({'error': 'User has already voted on this poll'}, status=400)
+
+        # Add the user's email to the voted_by array
+        poll['voted_by'] = poll.get('voted_by', []) + [email]
+
+        # Increase the vote count for the selected option
+        poll['votes'][optionIndex] += 1
+
+        # Update the poll document in the database
+        db["POLLS"].update_one({'pollId': pollId}, {'$set': poll})
+
+        return JsonResponse({'message': 'Vote added successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+
+def get_votes(request):
+    try:
+        email = request.GET.get('email')
+        pollId = request.GET.get('pollId')
+
+        db = get_database(email)
+
+        poll = db["POLLS"].find_one({'pollId': pollId})
+
+        if not poll:
+            return JsonResponse({'error': 'Poll not found'}, status=404)
+        return JsonResponse({'votes': poll['votes']})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
