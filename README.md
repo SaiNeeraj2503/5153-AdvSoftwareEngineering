@@ -1,9 +1,13 @@
 # 5153-SoftwareEngineering
 
 Team:
+
 Rakesh Rapalli
+
 Naveen kumar Poka
+
 Sai Neeraj chandragiri
+
 
 This project creates a website named "MSU Campus Connnect" which is a comprehensive campus related website. 
 
