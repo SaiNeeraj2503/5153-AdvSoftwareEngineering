@@ -10,6 +10,8 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Account from './pages/Account';
 import Feedback from './components/Feedback';
+import Events from './pages/Events';
+import Polls from './pages/Polls';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -59,10 +61,12 @@ function App() {
           <Route path="/groups" element={isAuthenticated ? <Groups userId={userId} email={email}/> : <Navigate to="/login" />} />
           <Route path="/marketplace" element={isAuthenticated ? <Marketplace userId={userId} email={email}/> : <Navigate to="/login" />} />
           <Route path="/postings" element={isAuthenticated ? <Postings userId={userId} email={email}/> :<Navigate to="/login" /> } />
+          <Route path="/events" element={isAuthenticated ? <Events userId={userId} email={email}/> :<Navigate to="/login" /> } />
           <Route path="/signup" element={<SignUp onSignUp={handleLogin} />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/account" element={isAuthenticated ? <Account userId={userId} email={email}/> :<Navigate to="/login" /> } />
           <Route path="/feedback" element={<Feedback userId={userId} email={email}/>} />
+          <Route path="/polls" element={isAuthenticated ? <Polls userId={userId} email={email}/> :<Navigate to="/login" /> } />
         </Routes>
       </div>
     </Router>

@@ -7,7 +7,6 @@ const CreatePostModal = ({ show, onClose, onSubmit, postFormData, handleInputCha
     <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold mb-4">Create Post</h2>
-
         <form onSubmit={onSubmit} className="flex flex-col" encType="multipart/form-data">
           <input
             type="text"
@@ -25,11 +24,10 @@ const CreatePostModal = ({ show, onClose, onSubmit, postFormData, handleInputCha
             value={postFormData.content}
             onChange={handleInputChange}
           ></textarea>
- 
           <input
             type="file"
             name="image"
-            accept="image/*" // Allow only image files
+            accept="image/*" 
             className="border border-gray-300 rounded-md px-4 py-2 mb-4"
             onChange={handleInputChange}
           />

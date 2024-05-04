@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
-const ListingsGrid = ({type, email, onListingClick}) => {
+const ListingsGrid = ({type, email, onListingClick, searchQuery, refreshGrid}) => {
   const [listings, setListings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchListings(currentPage);
-  }, [currentPage]); // Fetch listings whenever currentPage changes
+  }, [currentPage, searchQuery, refreshGrid]); // Fetch listings whenever currentPage changes
 
   const fetchListings = async (page) => {
     try {
-      const response = await axios.get(`http://localhost:8000/app/get-listings?page=${currentPage}&email=${email}&type=${type}`);
+      const response = await axios.get(`http://localhost:8000/app/get-listings?page=${currentPage}&email=${email}&type=${type}&searchQuery=${searchQuery}`);
       setListings(response.data.listings);
       setTotalPages(response.data.totalPages);
     } catch (error) {

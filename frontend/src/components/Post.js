@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import moment from 'moment';
-import { FaAngleDown, FaAngleUp } from 'react-icons/fa'; // Import icons for extending and collapsing
+import { FaAngleDown, FaAngleUp } from 'react-icons/fa'; 
 
 const Post = ({ username, timestamp, imageUrl, title, description }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -34,7 +34,7 @@ const Post = ({ username, timestamp, imageUrl, title, description }) => {
           {showFullDescription ? (
             <>
               <p className="text-gray-700">{description}</p>
-              <div className="flex justify-end mt-2"> {/* Align buttons to the right */}
+              <div className="flex justify-end mt-2"> 
                 <button onClick={toggleDescription} className="text-blue-500 text-sm">
                   <FaAngleUp /> 
                 </button>
@@ -42,8 +42,8 @@ const Post = ({ username, timestamp, imageUrl, title, description }) => {
             </>
           ) : (
             <>
-              <p className="text-gray-700">{description.slice(0, 100)}...</p>
-              <div className="flex justify-end mt-2"> {/* Align buttons to the right */}
+              <p className="text-gray-700">{description.slice(0, 100)}</p>
+              <div className="flex justify-end mt-2"> 
                 <button onClick={toggleDescription} className="text-blue-500 text-sm">
                   <FaAngleDown /> 
                 </button>

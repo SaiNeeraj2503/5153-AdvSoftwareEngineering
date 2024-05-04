@@ -1,215 +1,171 @@
-import React, { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { FirebaseApp } from '../components/FirebaseApp';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import React, { useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 
-const storage = getStorage(FirebaseApp);
+const CreateListingModal = ({userId, email, onCloseModal, onGridRefresh }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const CreateGroupModal = ({userId, email, isOpen, onClose, updateGroups }) => {
-  const [step, setStep] = useState(1);
-  const [groupName, setGroupName] = useState('');
-  const [groupDescription, setGroupDescription] = useState('');
-  const [groupImage, setGroupImage] = useState('');
-  const [usersToAdd, setUsersToAdd] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [formData, setFormData] = useState({
+    companyName: '',
+    role: '',
+    requirements: '',
+    description: '',
+    applyLink: '',
+    applyEmail: '',
+    salary: '',
+    location: '',
+    expectedJoiningDate: null,
+    userEmail: email,
+    userId: userId,
+    listingType: '',
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.post('http://localhost:8000/app/get-users', { email: email, userId: userId}); 
-      setAllUsers(response.data.users); 
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-  
-
-  const handleGroupNameChange = (e) => {
-    setGroupName(e.target.value);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const handleGroupDescriptionChange = (e) => {
-    setGroupDescription(e.target.value);
+  const handleDateChange = (date) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      expectedJoiningDate: date,
+    }));
   };
 
-  const handleGroupImageChange = (e) => {
-    if (e.target.files[0]) {
-      setGroupImage(e.target.files[0]); // Set image file
-    }
-  };
-
-  const handleUserCheckboxChange = (userId) => {
-    if (usersToAdd.includes(userId)) {
-      setUsersToAdd(prevUsers => prevUsers.filter(id => id !== userId));
-    } else {
-      setUsersToAdd(prevUsers => [...prevUsers, userId]);
-    }
-  };
-  
-
-  const handleSubmitFirstStep = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStep(2);
-  };
-
-  const handleSubmitSecondStep = async () => {
-    if (creatingGroup) return; 
+    if(isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      setCreatingGroup(true);
+      const response = await axios.post('http://127.0.0.1:8000/app/create-listing', formData);
+      console.log('Form submitted successfully:', response.data);
       
-      const uniqueImageId = uuidv4();
-      const imageRef = ref(storage, `images/${uniqueImageId}`);
-      await uploadBytes(imageRef, groupImage);
-      const imageUrl = await getDownloadURL(imageRef);
+      // Close the modal
+      onCloseModal();
 
-      const groupData = {
-        user_id: userId,
-        email: email,
-        groupName: groupName,
-        groupDescription: groupDescription,
-        groupImage: imageUrl,
-        users: usersToAdd,
-      };
-
-      const response = await axios.post('http://localhost:8000/app/create-group', groupData);
-      console.log('Group Data:', groupData);
-      updateGroups();
-      handleCloseModal();
+      onGridRefresh();
     } catch (error) {
-      console.error('Error creating group:', error);
+      console.error('Error submitting form:', error);
+      // Handle errors, such as displaying an error message to the user
     } finally {
-      setCreatingGroup(false);
+      setIsSubmitting(false);
     }
   };
-
-  const handleCloseModal = () => {
-    setGroupName('');
-    setGroupDescription('');
-    setGroupImage(null);
-    setUsersToAdd([]);
-    setStep(1);
-    onClose();
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        {step === 1 ? (
-          <>
-            <h2 className="text-lg font-bold mb-4">Step 1: Group Details</h2>
-            <form onSubmit={handleSubmitFirstStep}>
-              <div className="mb-4">
-                <label htmlFor="groupName" className="block text-sm font-bold mb-2">
-                  Group Name
-                </label>
+    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-800 bg-opacity-50 overflow-y-auto">
+      <div className="bg-white p-6 rounded-lg w-full h-4/5 md:max-w-lg overflow-auto">
+        <h2 className="text-lg font-bold mb-4">Create New Listing</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Company Name</label>
+            <input type="text" id="companyName" name="companyName" value={formData.companyName} onChange={handleChange} className="mt-1 p-2 border border-gray-300 rounded-md w-full" required />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+            <input type="text" id="role" name="role" value={formData.role} onChange={handleChange} className="mt-1 p-2 border border-gray-300 rounded-md w-full" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Listing Type</label>
+            <div className="flex">
+              <label className="flex items-center mr-4">
                 <input
-                  type="text"
-                  id="groupName"
-                  value={groupName}
-                  onChange={handleGroupNameChange}
-                  className="border border-gray-300 rounded-md p-2 w-full"
+                  type="radio"
+                  name="listingType"
+                  value="job"
+                  checked={formData.listingType === 'job'}
+                  onChange={handleChange}
+                  className="mr-2"
                 />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="groupDescription" className="block text-sm font-bold mb-2">
-                  Group Description
-                </label>
-                <textarea
-                  id="groupDescription"
-                  value={groupDescription}
-                  onChange={handleGroupDescriptionChange}
-                  className="border border-gray-300 rounded-md p-2 w-full h-20 resize-none overflow-auto"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="groupImage" className="block text-sm font-bold mb-2">
-                  Group Image URL
-                </label>
+                Job
+              </label>
+              <label className="flex items-center">
                 <input
-                  type="file"
-                  accept="image/*"
-                  id="groupImage"
-                  onChange={handleGroupImageChange}
-                  className="border border-gray-300 rounded-md p-2 w-full"
+                  type="radio"
+                  name="listingType"
+                  value="internship"
+                  checked={formData.listingType === 'internship'}
+                  onChange={handleChange}
+                  className="mr-2"
                 />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="ml-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Next
-                </button>
-              </div>
-            </form>
-          </>
-        ) : (
-          <>
-            <h2 className="text-lg font-bold mb-4">Step 2: Select Users</h2>
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="mb-4">
-                <label htmlFor="usersToAdd" className="block text-sm font-bold mb-2">
-                  Users to Add
-                </label>
-                {allUsers
-                  .filter(user => user.user_id !== userId)
-                  .map(user => (
-                    <div key={user.user_id} className="flex items-center justify-between">
-                      <label htmlFor={`checkbox-${user.user_id}`} className="ml-2">{user.username}</label>
-                      <input
-                        type="checkbox"
-                        id={`checkbox-${user.user_id}`}
-                        checked={usersToAdd.includes(user.user_id)}
-                        onChange={() => handleUserCheckboxChange(user.user_id)}
-                        className="mr-2"
-                      />
-                    </div>
-                  ))}
+                Internship
+              </label>
+            </div>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="requirements" className="block text-sm font-medium text-gray-700">Requirements</label>
+            <textarea
+              id="requirements"
+              name="requirements"
+              value={formData.requirements}
+              onChange={handleChange}
+              className="mt-1 p-2 border border-gray-300 rounded-md w-full h-20 overflow-auto resize-none"
+              required
+            ></textarea>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="mt-1 p-2 border border-gray-300 rounded-md w-full h-20 overflow-auto resize-none"
+              required
+            ></textarea>
+          </div>
+          <div className="mb-4 w-full">
+            <label htmlFor="expectedJoiningDate" className="block text-sm font-medium text-gray-700">Expected Joining Date</label>
+            <div className="w-full">
+              <DatePicker
+                placeholderText="MM/DD/YYYY"
+                id="expectedJoiningDate"
+                name="expectedJoiningDate"
+                selected={formData.expectedJoiningDate}
+                onChange={handleDateChange}
+                className="mt-1 p-2 border border-gray-300 rounded-md"
+                required
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="applyLink" className="block text-sm font-medium text-gray-700">Apply Link</label>
+            <input type="url" id="applyLink" name="applyLink" value={formData.applyLink} onChange={handleChange} className="mt-1 p-2 border border-gray-300 rounded-md w-full" required />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="applyEmail" className="block text-sm font-medium text-gray-700">Contact Email</label>
+            <input type="applyEmail" id="applyEmail" name="applyEmail" value={formData.applyEmail} onChange={handleChange} className="mt-1 p-2 border border-gray-300 rounded-md w-full" required />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="salary" className="block text-sm font-medium text-gray-700">Expected Salary</label>
+            <input 
+              type="number" 
+              id="salary" 
+              name="salary" 
+              value={formData.salary} 
+              onChange={handleChange} 
+              className="mt-1 p-2 border border-gray-300 rounded-md w-full" 
+              required 
+              step="1000" 
+            />
+          </div>
 
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmitSecondStep}
-                  className="ml-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </>
-        )}
+          <div className="mb-4">
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
+            <input type="text" id="location" name="location" value={formData.location} onChange={handleChange} className="mt-1 p-2 border border-gray-300 rounded-md w-full" required />
+          </div>
+          <div className="flex justify-end mt-6">
+            <button type="button" onClick={onCloseModal} className="mr-2 ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-4 rounded">Cancel</button>
+            <button type="submit" className="py-2 px-4 bg-purple-700 text-white rounded-md hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Submit</button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default CreateGroupModal;
+export default CreateListingModal;

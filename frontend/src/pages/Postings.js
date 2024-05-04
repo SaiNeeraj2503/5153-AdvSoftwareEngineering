@@ -7,6 +7,8 @@ import ListingModal from '../components/ListingModal';
 const Postings = ({ userId, email }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [refreshGrid, setRefreshGrid] = useState(false);
 
   const handleListingClick = (listing) => {
     setSelectedListing(listing);
@@ -18,6 +20,14 @@ const Postings = ({ userId, email }) => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+  
+  const handleRefreshGrid = () => {
+    setRefreshGrid(!refreshGrid); 
   };
 
   return (
@@ -33,19 +43,30 @@ const Postings = ({ userId, email }) => {
             </button>
           </div>
 
+          
+          <div className="mt-8">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              className="block w-full md:w-1/2 mx-auto px-4 py-2 border border-gray-300 rounded-md mb-4"
+            />
+          </div>
+
           <section className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Jobs</h2>
-            <ListingsGrid type="job" email={email} onListingClick={handleListingClick} />
+            <ListingsGrid type="job" email={email} onListingClick={handleListingClick} searchQuery={searchQuery} refreshGrid={refreshGrid} />
           </section>
 
           <section className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Internships</h2>
-            <ListingsGrid type="internship" email={email} onListingClick={handleListingClick} />
+            <ListingsGrid type="internship" email={email} onListingClick={handleListingClick} searchQuery={searchQuery} refreshGrid={refreshGrid} />
           </section>
         </div>
       </div>
       <Footer />
-      {isModalOpen && <CreateListingModal userId={userId} email={email} onCloseModal={handleCloseModal} />}
+      {isModalOpen && <CreateListingModal userId={userId} email={email} onCloseModal={handleCloseModal} onGridRefresh={handleRefreshGrid}/>}
       {selectedListing && <ListingModal listing={selectedListing} onCloseModal={() => setSelectedListing(null)} />}
     </div>
   );

@@ -1,17 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
+const logoImagePath = process.env.PUBLIC_URL + '/images/logo.jpg';
 const Navbar = ({ isAuthenticated, onLogout }) => {
   return (
     <nav className="bg-white border-b border-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-black font-semibold text-lg">
-                MSU Campus Connect
-              </Link>
-            </div>
+          
+          <div className="flex-shrink-0 flex items-center">
+            <Link to="/">
+              <img src={logoImagePath} alt="MSU Campus Connect" className="h-8 w-auto" />
+            </Link>
+          </div>
             <div className="ml-4 flex items-center md:ml-6">
               <Link to="/discover" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">
                 Discover
@@ -24,6 +25,12 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
               </Link>
               <Link to="/postings" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">
                 Postings
+              </Link>
+              <Link to="/events" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                Events
+              </Link>
+              <Link to="/polls" className="text-black hover:bg-gray-200 px-3 py-2 rounded-md text-sm font-medium">
+                Polls
               </Link>
             </div>
           </div>

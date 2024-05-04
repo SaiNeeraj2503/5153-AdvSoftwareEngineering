@@ -63,6 +63,7 @@ function FAQs() {
         question="Question 2?"
         answer="Answer to question 2."
       />
+      {/* Add more FAQs as needed */}
     </div>
   );
 }

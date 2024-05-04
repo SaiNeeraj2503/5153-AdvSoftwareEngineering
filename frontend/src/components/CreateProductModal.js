@@ -7,7 +7,7 @@ import { FaTimes } from 'react-icons/fa';
 
 const storage = getStorage(FirebaseApp);
 
-const CreateProductModal = ({ userId, email, isOpen, onClose }) => {
+const CreateProductModal = ({ userId, email, isOpen, onClose, onProductCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -61,8 +61,18 @@ const CreateProductModal = ({ userId, email, isOpen, onClose }) => {
   
       const response = await axios.post('http://localhost:8000/app/create-product', productData);
       console.log('Product created:', response.data);
+      
+      onProductCreated();
 
       onClose();
+
+      setFormData({
+        productName: '',
+        price: '',
+        description: '',
+        mobileNumber: '',
+        images: [],
+      });
     } catch (error) {
       console.error('Error creating product:', error);
     } finally {

@@ -1,34 +1,85 @@
-import React from 'react';
-import { FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FaChevronLeft, FaChevronRight, FaChevronUp } from 'react-icons/fa';
+import Post from './Post';
 
-const ListingModal = ({ listing, onCloseModal }) => {
+const PostPagination = ({ email, query, creating }) => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState(query);
+
+  const fetchPosts = async (page) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8000/app/get-posts?page=${page}&email=${email}&searchQuery=${searchQuery}`);
+      setPosts(response.data.posts);
+      setTotalPages(response.data.totalPages);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts(currentPage);
+  }, [currentPage, email, searchQuery, creating]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSearchQuery(query);
+  }, [query]);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-800 bg-opacity-50">
-      <div className="relative bg-white p-8 rounded-lg w-4/5 h-4/5 overflow-y-auto shadow-lg">
-        <button onClick={onCloseModal} className="absolute top-0 right-0 m-4 text-gray-800 hover:text-gray-800">
-          <FaTimes />
+    <div>
+      {posts.map(post => (
+        <div key={post.id}>
+          <Post
+            username={post.username}
+            imageUrl={post.mediaUrl}
+            title={post.title}
+            description={post.description}
+            timestamp={post.timestamp}
+          />
+        </div>
+      ))}
+      {loading && <p className="text-center">Loading...</p>}
+      <div className="flex justify-center mt-4">
+        <button onClick={prevPage} disabled={currentPage === 1} className="bg-gray-100 hover:bg-gray-300 text-black font-bold py-2 px-4 mr-2 rounded">
+          <FaChevronLeft />
         </button>
-        <div className="flex justify-between mt-2 items-center mb-2">
-        <h2 className="text-2xl font-bold">{listing.companyName} <span className="text-xl font-normal">({listing.role})</span></h2>
-          <a href={listing.applyLink} className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded">
-            Apply Now
-          </a>
-        </div>
-        <div>
-        <p className="text-gray-700 mb-4">{listing.location}</p>
-        </div>
-        <div className="flex justify-between items-center border-t border-gray-300 pt-4 text-justify">
-          <div> 
-            <p className="text-gray-700 mb-4"><span className="font-bold">Description</span><br /> {listing.description}</p>
-            <p className="text-gray-700 mb-4"><span className="font-bold">Requirements</span><br /> {listing.requirements}</p>
-            <p className="text-gray-700 mb-4"><span className="font-bold">Salary:</span> ${listing.salary}</p>
-            <p className="text-gray-700 mb-4"><span className="font-bold">Contact Email:</span><br /> {listing.email}</p>
-            <p className="text-gray-700 mb-4"><span className="font-bold">Expected Joining Date:</span> {new Date(listing.expectedJoiningDate).toLocaleDateString()}</p>
-          </div>
-        </div>
+        <span className="mx-4 text-gray-600">Page {currentPage} of {totalPages}</span>
+        <button onClick={nextPage} disabled={currentPage === totalPages} className="bg-gray-100 hover:bg-gray-300 text-black font-bold py-2 px-4 mr-2 rounded">
+          <FaChevronRight />
+        </button>
+      </div>
+      <div className="fixed bottom-4 right-4">
+        <button onClick={scrollToTop} className="bg-blue-500 text-white px-4 py-2 rounded-full flex items-center">
+          <FaChevronUp />
+        </button>
       </div>
     </div>
   );
 };
 
-export default ListingModal;
+export default PostPagination;
