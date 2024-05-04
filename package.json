@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "firebase": "^10.9.0",
-    "firebase-tools": "^13.5.1",
-    "react-calendar": "^5.0.0",
-    "react-time-picker": "^7.0.0"
-  }
-}
